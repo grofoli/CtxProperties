@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd"
+       xmlns:util="http://www.springframework.org/schema/util">
+
+    <!-- In Spring 3.x it is possible to define a profile and then use the
+    Spring Expression Language (SpEL) later in the application context -->
+    <bean id="contextProfile" class="org.springframework.jndi.JndiObjectFactoryBean">
+        <property name="jndiName" value="java:comp/env/CtxProfile"/>
+        <property name="defaultObject" value="local"/>
+    </bean>
+
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/config_local.properties</value>
+                <value>#{'classpath:/config_'+contextProfile+'.properties'}</value>
+            </list>
+        </property>
+        <property name="ignoreResourceNotFound" value="true"/>
+    </bean>
+
+    <!-- It is also possible to set the system property -->
+    <bean id="sysProperties" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetObject" value="#{@systemProperties}"/>
+        <property name="targetMethod" value="putAll"/>
+        <property name="arguments">
+            <util:properties>
+                <prop key="com.lerox.profile">#{contextProfile}</prop>
+            </util:properties>
+        </property>
+    </bean>
+
+</beans>

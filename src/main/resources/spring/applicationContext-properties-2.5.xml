@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd"
+       xmlns:util="http://www.springframework.org/schema/util">
+
+    <!-- In Spring 2.5.x it is possible to define the whole location value -->
+    <bean id="contextProfile" class="org.springframework.jndi.JndiObjectFactoryBean">
+        <property name="jndiName" value="java:comp/env/CtxProfile"/>
+        <property name="defaultObject" value="classpath:/config_local.properties"/>
+    </bean>
+
+    <!--
+    Check also PropertyOverrideConfigurer
+    http://static.springsource.org/spring/docs/2.5.x/reference/beans.html#beans-factory-overrideconfigurer
+    without the placeholders and with default values
+
+    Configuration lines are expected to be of the following form:
+    beanName.property=value
+
+    The following flag might be interesting: boolean ignoreInvalidKeys
+    -->
+
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/config_local.properties</value>
+                <ref bean="contextProfile"/>
+            </list>
+        </property>
+        <property name="ignoreResourceNotFound" value="true"/>
+    </bean>
+
+    <!-- It is also possible to set the system property -->
+    <bean id="sysProperties" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetClass" value="java.lang.System" />
+        <property name="targetMethod" value="getProperties" />
+    </bean>
+
+    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetObject">
+            <!-- System.getProperties() -->
+            <ref bean="sysProperties"/>
+        </property>
+        <property name="targetMethod" value="putAll" />
+        <property name="arguments">
+            <map>
+                <entry key="com.lerox.profile" value-ref="contextProfile" />
+            </map>
+        </property>
+    </bean>
+
+</beans>
